@@ -27,8 +27,8 @@ garbage-app/
 │   ├── image\_processing.py
 │   └── model\_utils.py
 │
-├── venv310/                # Virtual environment Python (jangan diunggah ke GitHub)
-├── **pycache**/            # Cache Python (abaikan)
+├── venv310/                # Virtual environment Python 
+├── **pycache**/            # Cache Python
 
 ````
 
