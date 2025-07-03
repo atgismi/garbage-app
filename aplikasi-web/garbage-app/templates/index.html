@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garbage Detection AI - 12 Kategori</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .categories-info {
+            background: rgba(255,255,255,0.1);
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .category-item {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px dashed #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+
+        .upload-section.dragover {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .analyze-btn {
+            background: #2196F3;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 10px;
+        }
+
+        .analyze-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .analyze-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results-summary {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .result-category {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .disposal-method {
+            color: #888;
+            font-size: 0.8em;
+            font-style: italic;
+        }
+
+        .recyclable-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .recyclable {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .non-recyclable {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .confidence-section {
+            margin-top: 15px;
+        }
+
+        .confidence-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .confidence-high { background: #4CAF50; }
+        .confidence-medium { background: #FF9800; }
+        .confidence-low { background: #F44336; }
+
+        .tips {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .tips h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .tips ul {
+            list-style: none;
+        }
+
+        .tips li {
+            padding: 8px 0;
+            color: #666;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .tips li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .categories-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗂️ Garbage Detection AI</h1>
+            <p>Deteksi sampah dengan 12 kategori menggunakan Artificial Intelligence</p>
+            
+            <div class="categories-info">
+                <h3>📋 Kategori yang Didukung:</h3>
+                <div class="categories-grid">
+                    <div class="category-item">🔋 Baterai</div>
+                    <div class="category-item">🍃 Organik</div>
+                    <div class="category-item">🟤 Kaca Coklat</div>
+                    <div class="category-item">📦 Kardus</div>
+                    <div class="category-item">👕 Pakaian</div>
+                    <div class="category-item">🟢 Kaca Hijau</div>
+                    <div class="category-item">🔩 Logam</div>
+                    <div class="category-item">📄 Kertas</div>
+                    <div class="category-item">🥤 Plastik</div>
+                    <div class="category-item">👟 Sepatu</div>
+                    <div class="category-item">🗑️ Sampah Umum</div>
+                    <div class="category-item">⚪ Kaca Putih</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-icon">📷</div>
+                <h3>Upload Gambar Sampah</h3>
+                <p>Drag & drop gambar atau klik untuk memilih file</p>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Pilih Gambar
+                </button>
+                <button class="upload-btn" onclick="openCamera()">
+                    Buka Kamera
+                </button>
+            </div>
+
+            <!-- Image Preview -->
+            <div id="imagePreview" style="display: none; text-align: center;">
+                <img id="previewImg" class="image-preview" alt="Preview">
+                <div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        Ganti Gambar
+                    </button>
+                    <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()">
+                        Analisis Gambar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Sedang menganalisis gambar dengan AI...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error" style="display: none;"></div>
+
+            <!-- Results -->
+            <div class="results" id="results">
+                <h3>🔍 Hasil Deteksi</h3>
+                
+                <!-- Results Summary -->
+                <div class="results-summary" id="resultsSummary" style="display: none;">
+                    <h4>📊 Ringkasan Hasil</h4>
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="totalDetected">0</div>
+                            <div class="stat-label">Total Terdeteksi</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="recyclableCount">0</div>
+                            <div class="stat-label">Dapat Didaur Ulang</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="nonRecyclableCount">0</div>
+                            <div class="stat-label">Tidak Dapat Didaur Ulang</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="highestConfidence">0%</div>
+                            <div class="stat-label">Akurasi Tertinggi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resultsList"></div>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips">
+                <h3>💡 Tips Penggunaan</h3>
+                <ul>
+                    <li>Pastikan gambar memiliki pencahayaan yang baik</li>
+                    <li>Fokuskan kamera pada objek sampah</li>
+                    <li>Hindari gambar yang blur atau terlalu gelap</li>
+                    <li>AI dapat mendeteksi 12 kategori sampah berbeda</li>
+                    <li>Satu gambar dapat mendeteksi beberapa jenis sampah sekaligus</li>
+                    <li>Format yang didukung: JPG, PNG, JPEG, GIF</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        const API_URL = 'http://localhost:5000';
+
+        // 12 Kategori sampah
+        const CATEGORIES = {
+            'battery': { name: 'Baterai', icon: '🔋', recyclable: false },
+            'biological': { name: 'Sampah Organik/Biologis', icon: '🍃', recyclable: true },
+            'brown-glass': { name: 'Kaca Coklat', icon: '🟤', recyclable: true },
+            'cardboard': { name: 'Kardus', icon: '📦', recyclable: true },
+            'clothes': { name: 'Pakaian Bekas', icon: '👕', recyclable: true },
+            'green-glass': { name: 'Kaca Hijau', icon: '🟢', recyclable: true },
+            'metal': { name: 'Logam/Metal', icon: '🔩', recyclable: true },
+            'paper': { name: 'Kertas', icon: '📄', recyclable: true },
+            'plastic': { name: 'Plastik', icon: '🥤', recyclable: true },
+            'shoes': { name: 'Sepatu Bekas', icon: '👟', recyclable: false },
+            'trash': { name: 'Sampah Umum', icon: '🗑️', recyclable: false },
+            'white-glass': { name: 'Kaca Putih/Bening', icon: '⚪', recyclable: true }
+        };
+
+        // Drag and drop functionality
+        const uploadSection = document.getElementById('uploadSection');
+        
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Silakan pilih file gambar yang valid.');
+                return;
+            }
+
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+                hideError();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function openCamera() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'camera';
+            input.onchange = (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            };
+            input.click();
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile) {
+                showError('Silakan pilih gambar terlebih dahulu.');
+                return;
+            }
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loading = document.getElementById('loading');
+            
+            analyzeBtn.disabled = true;
+            loading.style.display = 'block';
+            hideError();
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+
+            try {
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResults(data.predictions, data.summary);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Terjadi kesalahan saat menganalisis gambar. Pastikan server berjalan di localhost:5000');
+            } finally {
+                analyzeBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(predictions, summary) {
+            const resultsList = document.getElementById('resultsList');
+            const results = document.getElementById('results');
+            const resultsSummary = document.getElementById('resultsSummary');
+            
+            resultsList.innerHTML = '';
+
+            if (!predictions || predictions.length === 0) {
+                resultsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Tidak ada sampah yang terdeteksi dalam gambar.</p>';
+                resultsSummary.style.display = 'none';
+            } else {
+                // Update summary
+                if (summary) {
+                    document.getElementById('totalDetected').textContent = summary.total_detected;
+                    document.getElementById('recyclableCount').textContent = summary.recyclable_items;
+                    document.getElementById('nonRecyclableCount').textContent = summary.non_recyclable_items;
+                    document.getElementById('highestConfidence').textContent = Math.round(summary.highest_confidence * 100) + '%';
+                    resultsSummary.style.display = 'block';
+                }
+
+                predictions.forEach(prediction => {
+                    const resultCard = createResultCard(prediction);
+                    resultsList.appendChild(resultCard);
+                });
+            }
+
+            results.style.display = 'block';
+        }
+
+        function createResultCard(prediction) {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            const confidence = Math.round(prediction.confidence * 100);
+            const confidenceClass = confidence >= 90 ? 'confidence-high' : 
+                                  confidence >= 70 ? 'confidence-medium' : 'confidence-low';
+
+            const category = CATEGORIES[prediction.class] || { name: prediction.class_name, icon: '❓', recyclable: false };
+
+            card.innerHTML = `
+                <div class="result-header">
+                    <div class="result-info">
+                        <div class="result-name">${category.icon} ${prediction.class_name}</div>
+                        <div class="result-category">${prediction.category || prediction.class}</div>
+                        <div class="disposal-method">💡 ${prediction.disposal_method || 'Lihat panduan pembuangan sampah'}</div>
+                    </div>
+                    <div class="recyclable-badge ${prediction.recyclable ? 'recyclable' : 'non-recyclable'}">
+                        ${prediction.recyclable ? '♻️ Dapat Didaur Ulang' : '🗑️ Tidak Dapat Didaur Ulang'}
+                    </div>
+                </div>
+                <div class="confidence-section">
+                    <div class="confidence-header">
+                        <span>Tingkat Akurasi</span>
+                        <span style="font-weight: bold;">${confidence}%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill ${confidenceClass}" style="width: ${confidence}%"></div>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Load categories info on page load
+        async function loadCategoriesInfo() {
+            try {
+                const response = await fetch(`${API_URL}/categories`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Loaded categories:', data);
+                }
+            } catch (error) {
+                console.log('Could not load categories info');
+            }
+        }
+
+        // Initialize
+        loadCategoriesInfo();
+    </script>
+</body>
+</html>
